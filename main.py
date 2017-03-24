@@ -8,7 +8,7 @@ importer = csv.CSVInput()
 importer.read(filename)
 
 temp = importer.get_temperature()
+getter = archive.ArchiveGetter()
 
-getter = archive.AcrhiveGetter()
 
 
