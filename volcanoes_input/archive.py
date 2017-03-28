@@ -2,6 +2,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 from calendar import monthrange
 from urllib import request
 import re
+import os
 
 
 class ArchiveGetter:
@@ -36,8 +37,7 @@ class ArchiveGetter:
                                   )
         return result
 
-
-
+    @staticmethod
     def get_url_from_page(url):
         try:
             f = request.urlopen(url)
@@ -58,6 +58,19 @@ class ArchiveGetter:
                     if el != "":
                         file.write(el + '\n')
             file.close()
+
+    @staticmethod
+    def load_image(url):
+        request.urlretrieve(url, 'files/archive/' + os.path.basename(request.urlsplit(url).path))
+
+    def load_images(self):
+        urls = []
+        with open('files/urls.txt', 'r') as file:
+            for line in file:
+                urls.append(line.replace('\n', ''))
+        pool = ThreadPool(13)
+        pool.map(ArchiveGetter.load_image, urls)
+
 
 
 

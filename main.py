@@ -1,4 +1,5 @@
 from weather_input import csv
+import sys
 from volcanoes_input import archive
 import matplotlib.pyplot as plt
 
@@ -10,7 +11,11 @@ importer.read(filename)
 # Get archive images.
 temp = importer.get_temperature()
 getter = archive.ArchiveGetter([2015, 2016])
-getter.load_pages()
+
+if 'pageloading' in sys.argv:
+    getter.load_pages()
+if 'imageloading' in sys.argv:
+    getter.load_images()
 
 # Extract archive photos timestamps.
 
