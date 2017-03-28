@@ -5,9 +5,9 @@ import re
 
 
 class ArchiveGetter:
-    def __init__(self):
+    def __init__(self, years):
         self.months = ArchiveGetter.get_months()
-        self.years = [2015, 2016]
+        self.years = years
         self.base_url = 'http://volcano.febras.net/archive/'
 
     @staticmethod
@@ -34,16 +34,31 @@ class ArchiveGetter:
                                   ArchiveGetter.form_calendar_number_format(month) + '/' +
                                   ArchiveGetter.form_calendar_number_format(day) + '/' + 'SHV1'
                                   )
+        return result
 
-    def get_url_from_page(self, url):
-        f = request.urlopen(url)
-        return re.findall(r'(?<=<a href=")[^"]*', f.read())
+
+
+    def get_url_from_page(url):
+        try:
+            f = request.urlopen(url)
+            return [url + '/' + s for s in re.findall(r'href=[\'"]?([^\'" >]+)', str(f.read()))[1:]]
+        except:
+            print(url, '404')
+            return ""
 
     def load_pages(self):
         urls = self.form_urls()
-        pool = ThreadPool(4)
-        results = pool.map(self.get_url_from_page, urls)
-        print(results)
+        pool = ThreadPool(13)
+        results = pool.map(ArchiveGetter.get_url_from_page, urls)
+        pool.close()
+        pool.join()
+        with open('files/urls.txt', 'w') as file:
+            for res in results:
+                for el in res:
+                    if el != "":
+                        file.write(el + '\n')
+            file.close()
+
 
 
 
