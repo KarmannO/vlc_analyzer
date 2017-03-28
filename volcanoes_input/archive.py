@@ -1,37 +1,50 @@
+from multiprocessing.dummy import Pool as ThreadPool
 from calendar import monthrange
+from urllib import request
+import re
 
 
 class ArchiveGetter:
     def __init__(self):
-        self.root_path = 'http://volcano.febras.net/archive/'
-        self.cam_name = 'SHV1'
-        self.paths = []
+        self.months = ArchiveGetter.get_months()
         self.years = [2015, 2016]
-        for year in self.years:
-            path = self.root_path + str(year)
-            months = ArchiveGetter.form_months()
-            for month in months:
-                path_local_month = path + '/' + ArchiveGetter.stringify_date_element(month)
-                days = ArchiveGetter.form_days(year, month)
-                for day in days:
-                    path_local_days = path_local_month + '/' + ArchiveGetter.stringify_date_element(day)
-                    self.paths.append(path_local_days + '/' + self.cam_name)
-
-    def get_paths(self):
-        return self.paths
+        self.base_url = 'http://volcano.febras.net/archive/'
 
     @staticmethod
-    def form_months():
+    def get_months():
         return [i for i in range(1, 13)]
 
     @staticmethod
-    def form_days(year, month):
+    def get_days(month, year):
         return [i for i in range(1, monthrange(year, month)[1] + 1)]
 
     @staticmethod
-    def stringify_date_element(el):
-        if el < 10:
-            return '0' + str(el)
+    def form_calendar_number_format(num):
+        if num < 10:
+            return '0' + str(num)
         else:
-            return str(el)
+            return str(num)
+
+    def form_urls(self):
+        result = []
+        for year in self.years:
+            for month in self.months:
+                for day in ArchiveGetter.get_days(month, year):
+                    result.append(self.base_url + str(year) + '/' +
+                                  ArchiveGetter.form_calendar_number_format(month) + '/' +
+                                  ArchiveGetter.form_calendar_number_format(day) + '/' + 'SHV1'
+                                  )
+
+    def get_url_from_page(self, url):
+        f = request.urlopen(url)
+        return re.findall(r'(?<=<a href=")[^"]*', f.read())
+
+    def load_pages(self):
+        urls = self.form_urls()
+        pool = ThreadPool(4)
+        results = pool.map(self.get_url_from_page, urls)
+        print(results)
+
+
+
 
